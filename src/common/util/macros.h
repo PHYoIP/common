@@ -1,7 +1,7 @@
 /*
 author          Oliver Blaser
-date            08.05.2025
-copyright       MIT - Copyright (c) 2025 Oliver Blaser
+date            01.02.2026
+copyright       MIT - Copyright (c) 2026 Oliver Blaser
 */
 
 #ifndef IG_UTIL_MACROS_H
@@ -18,7 +18,7 @@ copyright       MIT - Copyright (c) 2025 Oliver Blaser
 //======================================================================================================================
 // declaration specifiers/attributes
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #define ATTR_ALWAYS_INLINE __forceinline
 #if (_MSVC_LANG >= 201703L)
 #define ATTR_UNUSED [[maybe_unused]]
@@ -98,8 +98,22 @@ copyright       MIT - Copyright (c) 2025 Oliver Blaser
 #define UTIL_MAX(_a, _b) ((_a) > (_b) ? (_a) : (_b))
 #define UTIL_MIN(_a, _b) ((_a) < (_b) ? (_a) : (_b))
 
-#define UTIL_ROUND(_type, _v)  ((_type)((_v) < 0 ? ((_v) - 0.5) : ((_v) + 0.5)))
-#define UTIL_ROUNDF(_type, _v) ((_type)((_v) < 0 ? ((_v) - 0.5f) : ((_v) + 0.5f)))
+#define UTIL_ROUND(_type, _v)  ((_type)((_v) < 0 ? ((_v) - (0.5)) : ((_v) + (0.5))))
+#define UTIL_ROUNDF(_type, _v) ((_type)((_v) < 0 ? ((_v) - (0.5f)) : ((_v) + (0.5f))))
+
+
+
+//======================================================================================================================
+// misc
+
+// see /doc/__func__.cpp
+#ifdef _MSC_VER
+#define UTIL__FUNCNAME__ __func__
+#define UTIL__FUNCSIG__  __FUNCSIG__
+#else
+#define UTIL__FUNCNAME__ __func__
+#define UTIL__FUNCSIG__  __PRETTY_FUNCTION__
+#endif
 
 
 
