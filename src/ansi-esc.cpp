@@ -8,7 +8,7 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 #include <stdint.h>
 
 #include "common/ansi-esc.h"
-#include "common/util/macros.h"
+#include "util/macros.h"
 
 
 
