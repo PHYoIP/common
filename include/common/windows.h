@@ -15,6 +15,8 @@ namespace windows {
 
 void enableVTProcessing();
 
+int formatMessage(int err, char* buffer, size_t size);
+
 }
 
 

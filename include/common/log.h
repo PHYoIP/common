@@ -101,6 +101,28 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 
 
+#ifdef _WIN32
+
+#include "common/windows.h"
+
+#define LOG_ERR_WSA(msg, err)                                                                    \
+    do {                                                                                         \
+        char buffer[1024];                                                                       \
+        buffer[0] = 0x20;                                                                        \
+        if (0 != windows::formatMessage(err, buffer + 1, sizeof(buffer) - 1)) { buffer[0] = 0; } \
+        LOG_ERR(msg " (%i%s)", err, buffer);                                                     \
+    }                                                                                            \
+    while (0)
+
+#if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_ERR)
+#undef LOG_ERR_WSA
+#define LOG_ERR_WSA(...) (void)0
+#endif
+
+#endif // _WIN32
+
+
+
 #ifdef __cplusplus
 #include <string>
 std::string LOG_tNow_local_iso8601();
