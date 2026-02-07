@@ -4,16 +4,16 @@ date            01.02.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
-/*
-    This log is written to stderr, for user interaction see cli.h
-*/
-
 #ifndef IG_COMMON_LOG_H
 #define IG_COMMON_LOG_H
 
 #include <stdio.h>
 
 #include "common/ansi-esc.h"
+
+
+
+#define ___LOG_OUTSTREAM stderr
 
 
 
@@ -67,10 +67,10 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 
 // clang-format off
-#define LOG_ERR(msg, ...) fprintf(stderr, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <ERR> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_ERR] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
-#define LOG_WRN(msg, ...) fprintf(stderr, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <WRN> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_WRN] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
-#define LOG_INF(msg, ...) fprintf(stderr, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <INF> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_INF] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
-#define LOG_DBG(msg, ...) fprintf(stderr, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <DBG> " "%s" "%s():%i" "%s" " " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_DEFAULT], ansi::esc[LOG_COL_DBG], __func__, (int)(__LINE__), ansi::esc[LOG_COL_DEFAULT] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
+#define LOG_ERR(msg, ...) fprintf(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <ERR> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_ERR] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
+#define LOG_WRN(msg, ...) fprintf(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <WRN> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_WRN] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
+#define LOG_INF(msg, ...) fprintf(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <INF> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_INF] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
+#define LOG_DBG(msg, ...) fprintf(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <DBG> " "%s" "%s():%i" "%s" " " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_DEFAULT], ansi::esc[LOG_COL_DBG], __func__, (int)(__LINE__), ansi::esc[LOG_COL_DEFAULT] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
 // clang-format on
 
 
@@ -101,18 +101,42 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 
 
+#define LOG_DBG_HD(data, count, msg) \
+    {                                \
+        LOG_DBG(msg);                \
+        LOG_hexDump(data, count);    \
+    }
+
+#if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_DBG)
+#undef LOG_DBG_HD
+#define LOG_DBG_HD(...) (void)0
+#endif
+
+
+
+#include <string.h>
+
+#define LOG_ERR_ERRNO(msg, eno) LOG_ERR(msg " (%i %s)", eno, strerror(eno))
+
+#if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_ERR)
+#undef LOG_ERR_ERRNO
+#define LOG_ERR_ERRNO(...) (void)0
+#endif
+
+
+
 #ifdef _WIN32
 
 #include "common/windows.h"
 
 #define LOG_ERR_WSA(msg, err)                                                                    \
-    do {                                                                                         \
+    {                                                                                            \
         char buffer[1024];                                                                       \
         buffer[0] = 0x20;                                                                        \
         if (0 != windows::formatMessage(err, buffer + 1, sizeof(buffer) - 1)) { buffer[0] = 0; } \
         LOG_ERR(msg " (%i%s)", err, buffer);                                                     \
-    }                                                                                            \
-    while (0)
+    }
+
 
 #if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_ERR)
 #undef LOG_ERR_WSA
@@ -130,6 +154,8 @@ std::string LOG_tNow_local_iso8601();
 const char* LOG_tNow_local_iso8601();
 #endif // __cplusplus
 
+void LOG_hexDump(const uint8_t* data, size_t count);
+
 
 
 #endif // IG_COMMON_LOG_H
@@ -145,6 +171,7 @@ const char* LOG_tNow_local_iso8601();
 #ifdef COMMON_LOG_DEFINE_FUNCTIONS
 #undef COMMON_LOG_DEFINE_FUNCTIONS
 
+#include <ctype.h>
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -197,6 +224,85 @@ const char* LOG_tNow_local_iso8601()
 }
 
 #endif // __cplusplus
+
+
+
+/**
+ * @brief Converts the data buffer bytes to printable characters.
+ *
+ * Writes 16 characters and a terminating null to `buffer`.
+ *
+ * @param buffer Destination string buffer
+ * @param p First element to parse, points into the source data buffer
+ * @param end First element after the source data buffer
+ */
+static void hexDump_dataToString(char* buffer, const uint8_t* p, const uint8_t* end)
+{
+    size_t i = 0;
+
+    while ((i < 16) && (p < end))
+    {
+        if (isprint(*p)) { buffer[i] = (char)(*p); }
+        else { buffer[i] = '.'; }
+
+        ++p;
+        ++i;
+    }
+
+    while (i < 16)
+    {
+        buffer[i] = ' ';
+        ++i;
+    }
+
+    buffer[i] = 0;
+}
+
+void hexDump(const uint8_t* data, size_t count)
+{
+    if (!data) { count = 0; }
+
+    const uint8_t* const end = (data + count);
+
+    for (size_t i = 0; i < count; ++i)
+    {
+        const int byte = *(data + i);
+        const size_t row = (i / 16);
+        const size_t col = (i % 16);
+
+        if (col == 0)
+        {
+            if (i == 0) { fprintf(___LOG_OUTSTREAM, "%05zx ", i); }
+            else
+            {
+                char str[17];
+                hexDump_dataToString(str, data + 16 * (row - 1), end);
+                fprintf(___LOG_OUTSTREAM, "  | %s\n%05zx ", str, i);
+            }
+        }
+        else if (col == 8) { fprintf(___LOG_OUTSTREAM, " "); }
+
+        fprintf(___LOG_OUTSTREAM, " %02x", byte);
+    }
+
+    if (count == 0) { fprintf(___LOG_OUTSTREAM, "%05x ", 0); }
+
+
+
+    size_t lastRowSize = (count % 16);
+    if ((lastRowSize == 0) && (count != 0)) { lastRowSize = 16; }
+    const size_t remaining = (16 - lastRowSize);
+
+    if (remaining >= 8) { fprintf(___LOG_OUTSTREAM, " "); }
+    for (size_t i = 0; i < remaining; ++i) { fprintf(___LOG_OUTSTREAM, "   "); }
+
+    char str[17];
+    hexDump_dataToString(str, end - lastRowSize, end);
+    fprintf(___LOG_OUTSTREAM, "  | %s", str);
+
+    fprintf(___LOG_OUTSTREAM, "\n");
+}
+
 
 
 #endif // COMMON_LOG_DEFINE_FUNCTIONS
