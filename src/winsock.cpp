@@ -61,7 +61,7 @@ int winsock::cleanup()
         {
             static int depth = 0;
 
-            if (depth % 5 == 0) { LOG_WRN("WSACleanup() failed, in progress ..."); }
+            if ((depth % 5) == 0) { LOG_WRN("WSACleanup() failed, in progress ..."); }
 
             ++depth;
 

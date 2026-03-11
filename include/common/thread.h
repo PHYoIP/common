@@ -56,6 +56,17 @@ public:
     // clang-format on
 
 
+    /**
+     * Resets the thread control signals and status as if newly constructed.
+     */
+    void reset()
+    {
+        lock_guard lg(m_mtxThreadCtl);
+        m_status = Status::null;
+        m_sigterm = false;
+        m_sigkill = false;
+    }
+
 private:
     Status m_status;
     bool m_sigterm;
