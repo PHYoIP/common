@@ -22,6 +22,8 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 #else // _WIN32
 
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
