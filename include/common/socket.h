@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            10.03.2026
+date            14.03.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -31,6 +31,25 @@ typedef uint16_t in_port_t;
 
 typedef int sockfd_t;
 typedef int sockopt_optval_t;
+
+
+
+#include <byteswap.h>
+#include <endian.h>
+
+#if ((defined(__BYTE_ORDER) && (__BYTE_ORDER == __BIG_ENDIAN)) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __BIG_ENDIAN__)) || defined(__ARMEB__) || \
+     defined(__AARCH64EB__) || defined(__THUMBEB__) || defined(_MIPSEB) || defined(__MIPSEB) || defined(__MIPSEB__))
+static inline uint64_t htonll(uint64_t hostlonglong) { return hostlonglong; }
+static inline uint64_t ntohll(uint64_t netlonglong) { return netlonglong; }
+#endif
+
+#if ((defined(__BYTE_ORDER) && (__BYTE_ORDER == __LITTLE_ENDIAN)) || (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __LITTLE_ENDIAN__)) || \
+     defined(__ARMEL__) || defined(__AARCH64EL__) || defined(__THUMBEL__) || defined(_MIPSEL) || defined(__MIPSEL) || defined(__MIPSEL__))
+static inline uint64_t htonll(uint64_t hostlonglong) { return bswap_64(hostlonglong); }
+static inline uint64_t ntohll(uint64_t netlonglong) { return bswap_64(netlonglong); }
+#endif
+
+
 
 #endif // Windows / *nix
 
