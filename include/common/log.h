@@ -104,7 +104,7 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 #define LOG_DBG_HD(data, count, msg) \
     {                                \
         LOG_DBG(msg);                \
-        LOG_hexDump(data, count);    \
+        ___LOG_hexDump(data, count); \
     }
 
 #if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_DBG)
@@ -154,7 +154,7 @@ std::string LOG_tNow_local_iso8601();
 const char* LOG_tNow_local_iso8601();
 #endif // __cplusplus
 
-void LOG_hexDump(const uint8_t* data, size_t count);
+void ___LOG_hexDump(const uint8_t* data, size_t count);
 
 
 
@@ -258,7 +258,7 @@ static void hexDump_dataToString(char* buffer, const uint8_t* p, const uint8_t* 
     buffer[i] = 0;
 }
 
-void hexDump(const uint8_t* data, size_t count)
+void ___LOG_hexDump(const uint8_t* data, size_t count)
 {
     if (!data) { count = 0; }
 
