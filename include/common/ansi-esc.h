@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            01.02.2026
+date            15.03.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -65,6 +65,8 @@ namespace ansi {
 extern const char* const * esc;
 
 void initEscapeCodes(bool enable);
+
+bool escEnabled();
 
 }
 

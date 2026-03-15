@@ -107,9 +107,42 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
         ___LOG_hexDump(data, count); \
     }
 
+#define LOG_INF_HD(data, count, msg) \
+    {                                \
+        LOG_INF(msg);                \
+        ___LOG_hexDump(data, count); \
+    }
+
+#define LOG_WRN_HD(data, count, msg) \
+    {                                \
+        LOG_WRN(msg);                \
+        ___LOG_hexDump(data, count); \
+    }
+
+#define LOG_ERR_HD(data, count, msg) \
+    {                                \
+        LOG_ERR(msg);                \
+        ___LOG_hexDump(data, count); \
+    }
+
 #if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_DBG)
 #undef LOG_DBG_HD
 #define LOG_DBG_HD(...) (void)0
+#endif
+
+#if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_INF)
+#undef LOG_INF_HD
+#define LOG_INF_HD(...) (void)0
+#endif
+
+#if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_WRN)
+#undef LOG_WRN_HD
+#define LOG_WRN_HD(...) (void)0
+#endif
+
+#if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_ERR)
+#undef LOG_ERR_HD
+#define LOG_ERR_HD(...) (void)0
 #endif
 
 

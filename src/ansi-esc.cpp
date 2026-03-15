@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            01.02.2026
+date            15.03.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -79,6 +79,8 @@ void ansi::initEscapeCodes(bool enable)
         ansi::esc = escNull;
     }
 }
+
+bool ansi::escEnabled() { return (ansi::esc == escCodes); }
 
 
 
