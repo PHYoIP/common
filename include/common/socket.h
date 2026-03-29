@@ -24,6 +24,7 @@ typedef int sockfd_t;
 
 typedef char sockopt_optval_t;
 typedef uint16_t in_port_t;
+typedef int ssize_t;
 
 #else // *nix
 
