@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            01.02.2026
+date            11.04.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -187,7 +187,7 @@ std::string LOG_tNow_local_iso8601();
 const char* LOG_tNow_local_iso8601();
 #endif // __cplusplus
 
-void ___LOG_hexDump(const uint8_t* data, size_t count);
+void ___LOG_hexDump(const void* data, size_t count);
 
 
 
@@ -269,7 +269,7 @@ const char* LOG_tNow_local_iso8601()
  * @param p First element to parse, points into the source data buffer
  * @param end First element after the source data buffer
  */
-static void hexDump_dataToString(char* buffer, const uint8_t* p, const uint8_t* end)
+static void ___LOG_hexDump_dataToString(char* buffer, const uint8_t* p, const uint8_t* end)
 {
     size_t i = 0;
 
@@ -291,15 +291,15 @@ static void hexDump_dataToString(char* buffer, const uint8_t* p, const uint8_t* 
     buffer[i] = 0;
 }
 
-void ___LOG_hexDump(const uint8_t* data, size_t count)
+void ___LOG_hexDump(const void* data, size_t count)
 {
     if (!data) { count = 0; }
 
-    const uint8_t* const end = (data + count);
+    const uint8_t* const end = ((const uint8_t*)data + count);
 
     for (size_t i = 0; i < count; ++i)
     {
-        const int byte = *(data + i);
+        const int byte = *((const uint8_t*)data + i);
         const size_t row = (i / 16);
         const size_t col = (i % 16);
 
@@ -309,7 +309,7 @@ void ___LOG_hexDump(const uint8_t* data, size_t count)
             else
             {
                 char str[17];
-                hexDump_dataToString(str, data + 16 * (row - 1), end);
+                ___LOG_hexDump_dataToString(str, (const uint8_t*)data + 16 * (row - 1), end);
                 fprintf(___LOG_OUTSTREAM, "  | %s\n%05zx ", str, i);
             }
         }
@@ -330,7 +330,7 @@ void ___LOG_hexDump(const uint8_t* data, size_t count)
     for (size_t i = 0; i < remaining; ++i) { fprintf(___LOG_OUTSTREAM, "   "); }
 
     char str[17];
-    hexDump_dataToString(str, end - lastRowSize, end);
+    ___LOG_hexDump_dataToString(str, end - lastRowSize, end);
     fprintf(___LOG_OUTSTREAM, "  | %s", str);
 
     fprintf(___LOG_OUTSTREAM, "\n");

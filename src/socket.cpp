@@ -31,6 +31,12 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 
 
+#ifdef _MSC_VER
+#pragma warning(disable :4996)
+#endif
+
+
+
 #define SWITCH_CASE_STRCPY_DEFINE(_dst, _define, _off)    \
     case _define:                                         \
         strcpy((_dst), (const char*)(#_define) + (_off)); \
