@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            01.02.2026
+date            26.03.2026
 copyright       MIT - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -95,8 +95,13 @@ copyright       MIT - Copyright (c) 2026 Oliver Blaser
 
 #define UTIL_CLAMP(_v, _lo, _hi) ((_v) < (_lo) ? (_lo) : ((_v) > (_hi) ? (_hi) : (_v)))
 
-#define UTIL_MAX(_a, _b) ((_a) > (_b) ? (_a) : (_b))
-#define UTIL_MIN(_a, _b) ((_a) < (_b) ? (_a) : (_b))
+#define UTIL_MAX(_a, _b)          ((_a) > (_b) ? (_a) : (_b))
+#define UTIL_MAX3(_a, _b, _c)     (UTIL_MAX(UTIL_MAX((_a), (_b)), (_c)))
+#define UTIL_MAX4(_a, _b, _c, _d) (UTIL_MAX3(UTIL_MAX((_a), (_b)), (_c), (_d)))
+
+#define UTIL_MIN(_a, _b)          ((_a) < (_b) ? (_a) : (_b))
+#define UTIL_MIN3(_a, _b, _c)     (UTIL_MIN(UTIL_MIN((_a), (_b)), (_c)))
+#define UTIL_MIN4(_a, _b, _c, _d) (UTIL_MIN3(UTIL_MIN((_a), (_b)), (_c), (_d)))
 
 #define UTIL_ROUND(_type, _v)  ((_type)((_v) < 0 ? ((_v) - (0.5)) : ((_v) + (0.5))))
 #define UTIL_ROUNDF(_type, _v) ((_type)((_v) < 0 ? ((_v) - (0.5f)) : ((_v) + (0.5f))))
