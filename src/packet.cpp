@@ -219,8 +219,8 @@ ssize_t packet::serialise::uart(uint8_t* buffer, size_t size, const Uart& packet
     struct phyoip_uarthdr* const hdr = (struct phyoip_uarthdr*)uartBuffer.data();
     hdr->hsize = dataoffs;
     hdr->dsize = htons((uint16_t)packet.size());
-    hdr->timestamp = (int64_t)packet.timestamp();
-    hdr->nsec = packet.nsec();
+    hdr->timestamp = htonll((int64_t)packet.timestamp());
+    hdr->nsec = htonl(packet.nsec());
     if (packet.isIngress()) { hdr->ingress = 1; }
     else { hdr->ingress = 0; }
 
