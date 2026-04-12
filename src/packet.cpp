@@ -7,12 +7,14 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <ctime>
 #include <string>
 #include <vector>
 
 #include "common/packet.h"
 #include "project.h"
 #include "util/macros.h"
+#include "util/time.h"
 
 #include <phyoip/protocol/cmp.h>
 #include <phyoip/protocol/discop.h>
@@ -42,7 +44,57 @@ constexpr uint8_t phyoiphdrIdentifier[] = PHYOIP_HDR_IDENTIFIER_INITIALIZER_LIST
 
 
 
-int packet::serialise::phyoip(uint8_t* buffer, size_t size, uint8_t proto, const uint8_t* data, size_t count)
+packet::Uart::Uart(const uint8_t* data, size_t count, const Direction& direction)
+    : m_timestamp(0), m_nsec(0), m_ingress(), m_data(data, data + count)
+{
+    m_setTimestampNow();
+    setDirection(direction);
+}
+
+packet::Uart::Uart(const std::vector<uint8_t>& data, const Direction& direction)
+    : m_timestamp(0), m_nsec(0), m_ingress(), m_data(data)
+{
+    m_setTimestampNow();
+    setDirection(direction);
+}
+
+packet::Uart::Uart(const char* str, const Direction& direction)
+    : m_timestamp(0), m_nsec(0), m_ingress(), m_data((const uint8_t*)str, (const uint8_t*)str + strlen(str))
+{
+    m_setTimestampNow();
+    setDirection(direction);
+}
+
+void packet::Uart::setDirection(const Direction& direction)
+{
+    switch (direction)
+    {
+    case Direction::ingress:
+        m_ingress = true;
+        break;
+
+    case Direction::egress:
+        m_ingress = false;
+        break;
+    }
+}
+
+void packet::Uart::m_setTimestampNow()
+{
+    struct timespec tspec;
+    if (0 != UTIL_getTime(&tspec)) // this needs at least C11/C++17
+    {
+        tspec.tv_sec = 0;
+        tspec.tv_nsec = 0;
+    }
+
+    m_timestamp = tspec.tv_sec;
+    m_nsec = (int32_t)tspec.tv_nsec;
+}
+
+
+
+ssize_t packet::serialise::phyoip(uint8_t* buffer, size_t size, uint8_t proto, const uint8_t* data, size_t count)
 {
     constexpr uint8_t dataoffs = sizeof(struct phyoiphdr);
 
@@ -62,10 +114,10 @@ int packet::serialise::phyoip(uint8_t* buffer, size_t size, uint8_t proto, const
     if (!data) { count = 0; }
     for (size_t i = 0; i < count; ++i) { buffer[dataoffs + i] = *(data + i); }
 
-    return 0;
+    return (ssize_t)dataoffs + (ssize_t)count; // type overflow is nearly impossible, no check is done
 }
 
-int packet::serialise::cmp(uint8_t* buffer, size_t size, uint8_t type, const uint8_t* data, size_t count)
+ssize_t packet::serialise::cmp(uint8_t* buffer, size_t size, uint8_t type, const uint8_t* data, size_t count)
 {
     constexpr uint8_t dataoffs = sizeof(struct phyoip_cmphdr);
 
@@ -94,7 +146,7 @@ int packet::serialise::cmp(uint8_t* buffer, size_t size, uint8_t type, const uin
     return packet::serialise::phyoip(buffer, size, PHYOIP_PROTO_CMP, cmpBuffer.data(), cmpBuffer.size());
 }
 
-int packet::serialise::cmpAck(uint8_t* buffer, size_t size, uint8_t status)
+ssize_t packet::serialise::cmpAck(uint8_t* buffer, size_t size, uint8_t status)
 {
     std::vector<uint8_t> data(sizeof(struct phyoip_cmpack), 0);
 
@@ -104,7 +156,7 @@ int packet::serialise::cmpAck(uint8_t* buffer, size_t size, uint8_t status)
     return packet::serialise::cmp(buffer, size, PHYOIP_CMP_ACK, data.data(), data.size());
 }
 
-int packet::serialise::cmpPeerInfo(uint8_t* buffer, size_t size)
+ssize_t packet::serialise::cmpPeerInfo(uint8_t* buffer, size_t size)
 {
     const std::string name = prj::appName;
     const std::string description = "PHYoIP server sample implementation";
@@ -139,7 +191,38 @@ int packet::serialise::cmpPeerInfo(uint8_t* buffer, size_t size)
     return packet::serialise::cmp(buffer, size, PHYOIP_CMP_PEERINFO, data.data(), data.size());
 }
 
-int packet::serialise::cmpReqPeerInfo(uint8_t* buffer, size_t size) { return packet::serialise::cmp(buffer, size, PHYOIP_CMP_REQPEERINFO, nullptr, 0); }
+ssize_t packet::serialise::cmpReqPeerInfo(uint8_t* buffer, size_t size) { return packet::serialise::cmp(buffer, size, PHYOIP_CMP_REQPEERINFO, nullptr, 0); }
+
+ssize_t packet::serialise::uart(uint8_t* buffer, size_t size, const Uart& packet)
+{
+    constexpr uint8_t dataoffs = sizeof(struct phyoip_uarthdr);
+
+    if (packet.size() > UINT16_MAX)
+    {
+        LOG_ERR("%s can't serialise %zu bytes of data", UTIL__FUNCSIG__, packet.size());
+        return -(__LINE__);
+    }
+
+    if (size < (dataoffs + packet.size()))
+    {
+        LOG_ERR("%s insufficient buffer size: %zu", UTIL__FUNCSIG__, size);
+        return -(__LINE__);
+    }
+
+    std::vector<uint8_t> uartBuffer(dataoffs + packet.size(), 0);
+
+    struct phyoip_uarthdr* const hdr = (struct phyoip_uarthdr*)uartBuffer.data();
+    hdr->hsize = dataoffs;
+    hdr->dsize = htons((uint16_t)packet.size());
+    hdr->timestamp = (int64_t)packet.timestamp();
+    hdr->nsec = packet.nsec();
+    if (packet.isIngress()) { hdr->ingress = 1; }
+    else { hdr->ingress = 0; }
+
+    for (size_t i = 0; i < packet.size(); ++i) { uartBuffer[dataoffs + i] = *(packet.data() + i); }
+
+    return packet::serialise::phyoip(buffer, size, PHYOIP_PROTO_UART, uartBuffer.data(), uartBuffer.size());
+}
 
 
 

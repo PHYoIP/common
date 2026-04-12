@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            14.03.2026
+date            11.04.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -9,6 +9,8 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 #include <cstddef>
 #include <cstdint>
+
+#include "bits/types.h"
 
 
 
@@ -24,7 +26,6 @@ typedef int sockfd_t;
 
 typedef char sockopt_optval_t;
 typedef uint16_t in_port_t;
-typedef int ssize_t;
 
 #else // *nix
 
