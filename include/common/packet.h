@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            11.04.2026
+date            12.04.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -60,7 +60,7 @@ namespace serialise {
 
     ssize_t cmp(uint8_t* buffer, size_t size, uint8_t type, const uint8_t* data, size_t count);
     ssize_t cmpAck(uint8_t* buffer, size_t size, uint8_t status);
-    ssize_t cmpPeerInfo(uint8_t* buffer, size_t size);
+    ssize_t cmpPeerInfo(uint8_t* buffer, size_t size, const char* name, const char* description, uint8_t vMaj, uint8_t vMin, const char* versionString);
     ssize_t cmpReqPeerInfo(uint8_t* buffer, size_t size);
 
     ssize_t uart(uint8_t* buffer, size_t size, const Uart& packet);

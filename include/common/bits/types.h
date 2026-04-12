@@ -15,12 +15,12 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 #ifdef _WIN32
 
 #ifdef _WIN64
+#define SSIZE_MAX INT64_MAX
 typedef int64_t ssize_t;
 #else
+#define SSIZE_MAX INT32_MAX
 typedef int32_t ssize_t;
 #endif
-
-static_assert(sizeof(ssize_t) == sizeof(size_t));
 
 #endif // _WIN32
 

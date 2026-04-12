@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            11.04.2026
+date            12.04.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -12,7 +12,6 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 #include <vector>
 
 #include "common/packet.h"
-#include "project.h"
 #include "util/macros.h"
 #include "util/time.h"
 
@@ -29,7 +28,7 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 
 #define LOG_MODULE_LEVEL LOG_LEVEL_DBG
-#define LOG_MODULE_NAME  PCK
+#define LOG_MODULE_NAME  COMMON_PACKET
 #include "common/log.h"
 
 
@@ -156,15 +155,22 @@ ssize_t packet::serialise::cmpAck(uint8_t* buffer, size_t size, uint8_t status)
     return packet::serialise::cmp(buffer, size, PHYOIP_CMP_ACK, data.data(), data.size());
 }
 
-ssize_t packet::serialise::cmpPeerInfo(uint8_t* buffer, size_t size)
+ssize_t packet::serialise::cmpPeerInfo(uint8_t* buffer, size_t size, const char* name, const char* description, uint8_t vMaj, uint8_t vMin,
+                                       const char* versionString)
 {
-    const std::string name = prj::appName;
-    const std::string description = "PHYoIP server sample implementation";
-    const std::string versionString = PRJ_VERSION_STR;
+    if (!name)
+    {
+        LOG_ERR("%s name is NULL", UTIL__FUNCSIG__);
+        return -(__LINE__);
+    }
+
+    const std::string nameStr = name;
+    const std::string descriptionStr = (description ? description : "");
+    const std::string versionStr = (versionString ? versionString : "");
 
     const size_t nameoffs = sizeof(struct phyoip_cmppi);
-    const size_t descoffs = sizeof(struct phyoip_cmppi) + name.length() + 1;
-    const size_t veroffs = sizeof(struct phyoip_cmppi) + name.length() + 1 + description.length() + 1;
+    const size_t descoffs = (description ? (sizeof(struct phyoip_cmppi) + nameStr.length() + 1) : 0);
+    const size_t veroffs = (versionString ? (sizeof(struct phyoip_cmppi) + nameStr.length() + 1 + descriptionStr.length() + 1) : 0);
 
     if ((nameoffs > UINT16_MAX) || (descoffs > UINT16_MAX) || (veroffs > UINT16_MAX))
     {
@@ -172,21 +178,20 @@ ssize_t packet::serialise::cmpPeerInfo(uint8_t* buffer, size_t size)
         return -(__LINE__);
     }
 
-    std::vector<uint8_t> data((sizeof(struct phyoip_cmppi) + name.length() + 1 + description.length() + 1 + versionString.length() + 1), 0);
+    std::vector<uint8_t> data((sizeof(struct phyoip_cmppi) + nameStr.length() + 1 + descriptionStr.length() + 1 + versionStr.length() + 1), 0);
 
     struct phyoip_cmppi* const info = (struct phyoip_cmppi*)data.data();
-    info->proto = PHYOIP_PROTO_UART;
-    info->supplier = htons(PHYOIP_SUPPLIER_PHYOIP);
+    info->proto = PHYOIP_PROTO_UART;                // these should also be passed by arbument
+    info->supplier = htons(PHYOIP_SUPPLIER_PHYOIP); // TODO create a class, see `packet::serialise::uart`
     info->nameoffs = htons((uint16_t)nameoffs);
-    info->version.v.maj = PRJ_VERSION_MAJ;
-    info->version.v.min = PRJ_VERSION_MIN;
+    info->version.v.maj = vMaj;
+    info->version.v.min = vMin;
     info->veroffs = htons((uint16_t)veroffs);
     info->descoffs = htons((uint16_t)descoffs);
-    static_assert((PRJ_VERSION_MAJ <= UINT8_MAX) && (PRJ_VERSION_MIN <= UINT8_MAX));
 
-    strcpy((char*)data.data() + nameoffs, name.c_str());
-    strcpy((char*)data.data() + descoffs, description.c_str());
-    strcpy((char*)data.data() + veroffs, versionString.c_str());
+    strcpy((char*)data.data() + nameoffs, nameStr.c_str());
+    if (description) { strcpy((char*)data.data() + descoffs, descriptionStr.c_str()); }
+    if (versionString) { strcpy((char*)data.data() + veroffs, versionStr.c_str()); }
 
     return packet::serialise::cmp(buffer, size, PHYOIP_CMP_PEERINFO, data.data(), data.size());
 }
