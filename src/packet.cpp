@@ -12,6 +12,7 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 #include <vector>
 
 #include "common/packet.h"
+#include "common/socket.h"
 #include "util/macros.h"
 #include "util/time.h"
 
