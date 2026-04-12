@@ -28,7 +28,7 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 #endif // Windows / *nix
 
 
-#define LOG_MODULE_LEVEL LOG_LEVEL_DBG
+#define LOG_MODULE_LEVEL LOG_LEVEL_INF
 #define LOG_MODULE_NAME  COMMON_PACKET
 #include "common/log.h"
 
@@ -105,7 +105,7 @@ ssize_t packet::serialise::phyoip(uint8_t* buffer, size_t size, uint8_t proto, c
     }
 
     struct phyoiphdr* const hdr = (struct phyoiphdr*)(buffer);
-    for (size_t i = 0; i < PHYOIP_HDR_IDENTIFIER_SIZE; ++i) { hdr->identifier[i] = phyoiphdrIdentifier[i]; }
+    for (size_t i = 0; i < PHYOIP_HDR_IDENTIFIER_SIZE; ++i) { hdr->identifier[i] = (char)phyoiphdrIdentifier[i]; }
     hdr->vermaj = PHYOIP_PROTOCOL_VERSION_MAJ;
     hdr->vermin = PHYOIP_PROTOCOL_VERSION_MIN;
     hdr->hsize = dataoffs;
@@ -238,7 +238,7 @@ bool packet::isCompatible(const void* phyoiphdr)
 
     for (size_t i = 0; i < PHYOIP_HDR_IDENTIFIER_SIZE; ++i)
     {
-        if ((uint8_t)(hdr->identifier[i]) != (uint8_t)(phyoiphdrIdentifier[i])) { return false; }
+        if ((uint8_t)(hdr->identifier[i]) != phyoiphdrIdentifier[i]) { return false; }
     }
 
     if (hdr->vermaj == 0) // development phase
