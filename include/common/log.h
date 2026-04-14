@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            11.04.2026
+date            13.04.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -59,6 +59,23 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 
 
+#ifdef _WIN32
+#define ___LOG_FLOCKFILE(_file)   _lock_file(_file)
+#define ___LOG_FUNLOCKFILE(_file) _unlock_file(_file)
+#else
+#define ___LOG_FLOCKFILE(_file)   flockfile(_file)
+#define ___LOG_FUNLOCKFILE(_file) funlockfile(_file)
+#endif
+
+#define ___LOG_FPRINTF(...)                   \
+    {                                         \
+        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);   \
+        fprintf(__VA_ARGS__);                 \
+        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM); \
+    }
+
+
+
 #define LOG_COL_DEFAULT SGR_FG_DEFAULT
 #define LOG_COL_ERR     SGR_FG_BRED
 #define LOG_COL_WRN     SGR_FG_BYELLOW
@@ -67,10 +84,10 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 
 // clang-format off
-#define LOG_ERR(msg, ...) fprintf(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <ERR> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_ERR] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
-#define LOG_WRN(msg, ...) fprintf(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <WRN> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_WRN] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
-#define LOG_INF(msg, ...) fprintf(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <INF> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_INF] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
-#define LOG_DBG(msg, ...) fprintf(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <DBG> " "%s" "%s():%i" "%s" " " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_DEFAULT], ansi::esc[LOG_COL_DBG], __func__, (int)(__LINE__), ansi::esc[LOG_COL_DEFAULT] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
+#define LOG_ERR(msg, ...) ___LOG_FPRINTF(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <ERR> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_ERR] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
+#define LOG_WRN(msg, ...) ___LOG_FPRINTF(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <WRN> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_WRN] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
+#define LOG_INF(msg, ...) ___LOG_FPRINTF(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <INF> " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_INF] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
+#define LOG_DBG(msg, ...) ___LOG_FPRINTF(___LOG_OUTSTREAM, "%s" "[%s] " "%s" ___LOG_STR(LOG_MODULE_NAME) " <DBG> " "%s" "%s():%i" "%s" " " msg "%s" "\n", ansi::esc[CSI_EL], LOG_TIMESTAMP_STR, ansi::esc[LOG_COL_DEFAULT], ansi::esc[LOG_COL_DBG], __func__, (int)(__LINE__), ansi::esc[LOG_COL_DEFAULT] ___LOG_OPT_VA_ARGS(__VA_ARGS__), ansi::esc[SGR_RESET])
 // clang-format on
 
 
@@ -101,28 +118,36 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 
 
-#define LOG_DBG_HD(data, count, msg) \
-    {                                \
-        LOG_DBG(msg);                \
-        ___LOG_hexDump(data, count); \
+#define LOG_DBG_HD(data, count, msg)          \
+    {                                         \
+        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);   \
+        LOG_DBG(msg);                         \
+        ___LOG_hexDump(data, count);          \
+        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM); \
     }
 
-#define LOG_INF_HD(data, count, msg) \
-    {                                \
-        LOG_INF(msg);                \
-        ___LOG_hexDump(data, count); \
+#define LOG_INF_HD(data, count, msg)          \
+    {                                         \
+        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);   \
+        LOG_INF(msg);                         \
+        ___LOG_hexDump(data, count);          \
+        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM); \
     }
 
-#define LOG_WRN_HD(data, count, msg) \
-    {                                \
-        LOG_WRN(msg);                \
-        ___LOG_hexDump(data, count); \
+#define LOG_WRN_HD(data, count, msg)          \
+    {                                         \
+        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);   \
+        LOG_WRN(msg);                         \
+        ___LOG_hexDump(data, count);          \
+        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM); \
     }
 
-#define LOG_ERR_HD(data, count, msg) \
-    {                                \
-        LOG_ERR(msg);                \
-        ___LOG_hexDump(data, count); \
+#define LOG_ERR_HD(data, count, msg)          \
+    {                                         \
+        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);   \
+        LOG_ERR(msg);                         \
+        ___LOG_hexDump(data, count);          \
+        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM); \
     }
 
 #if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_DBG)
