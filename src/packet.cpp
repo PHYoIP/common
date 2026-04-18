@@ -112,7 +112,7 @@ ssize_t packet::serialise::phyoip(uint8_t* buffer, size_t size, uint8_t proto, c
     hdr->proto = proto;
 
     if (!data) { count = 0; }
-    for (size_t i = 0; i < count; ++i) { buffer[dataoffs + i] = *(data + i); }
+    for (size_t i = 0; i < count; ++i) { *(buffer + dataoffs + i) = *(data + i); }
 
     return (ssize_t)dataoffs + (ssize_t)count; // type overflow is nearly impossible, no check is done
 }
