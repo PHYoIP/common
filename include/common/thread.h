@@ -51,8 +51,8 @@ public:
 
     // clang-format off
     Status status() const { lock_guard lg(m_mtxThreadCtl); return m_status; }
-    void terminate() { lock_guard lg(m_mtxThreadCtl); m_sigterm = true; }
-    void kill() { lock_guard lg(m_mtxThreadCtl); m_sigkill = true; }
+    void terminate() { lock_guard lg(m_mtxThreadCtl); m_sigterm = true; } ///< gracefully terminates the thread
+    void kill() { lock_guard lg(m_mtxThreadCtl); m_sigkill = true; } ///< kills the thread, use `terminate()` to gracefully terminate the thread
     // clang-format on
 
 
