@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            08.11.2026
+date            09.11.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -286,6 +286,22 @@ int comm::Serial::close()
 #endif
 
     m_isOpen = false;
+    m_good = (r == 0);
+    return r;
+}
+
+int comm::Serial::flush()
+{
+    if (!m_isOpen) { return -(__LINE__); }
+
+    int r = 0;
+
+#ifdef _WIN32
+    if (!PurgeComm(m_handle, PURGE_RXCLEAR | PURGE_TXCLEAR)) { r = -(__LINE__); }
+#else
+    if (tcflush(m_fd, TCIOFLUSH) != 0) { r = -(__LINE__); }
+#endif
+
     m_good = (r == 0);
     return r;
 }

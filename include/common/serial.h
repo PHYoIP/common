@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            08.11.2026
+date            09.11.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -42,8 +42,12 @@ public:
     virtual ~Serial();
 
     int open(const char* port, baud_type baud, uint8_t dataBits, Parity parity, StopBits stopBits);
-
     int close();
+
+    /**
+     * @brief Discards data in the input and output queues (received but not read, and written but not transmitted).
+     */
+    int flush();
 
     ssize_t read(uint8_t* buffer, size_t size);
     ssize_t read(char* buffer, size_t size) { return read((uint8_t*)buffer, size); }

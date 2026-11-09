@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            13.04.2026
+date            09.11.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -118,36 +118,36 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 
 
-#define LOG_DBG_HD(data, count, msg)          \
-    {                                         \
-        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);   \
-        LOG_DBG(msg);                         \
-        ___LOG_hexDump(data, count);          \
-        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM); \
+#define LOG_DBG_HD(data, count, msg)              \
+    {                                             \
+        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);       \
+        LOG_DBG(msg);                             \
+        ___LOG_hexDump(data, count, LOG_COL_DBG); \
+        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM);     \
     }
 
-#define LOG_INF_HD(data, count, msg)          \
-    {                                         \
-        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);   \
-        LOG_INF(msg);                         \
-        ___LOG_hexDump(data, count);          \
-        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM); \
+#define LOG_INF_HD(data, count, msg)              \
+    {                                             \
+        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);       \
+        LOG_INF(msg);                             \
+        ___LOG_hexDump(data, count, LOG_COL_INF); \
+        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM);     \
     }
 
-#define LOG_WRN_HD(data, count, msg)          \
-    {                                         \
-        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);   \
-        LOG_WRN(msg);                         \
-        ___LOG_hexDump(data, count);          \
-        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM); \
+#define LOG_WRN_HD(data, count, msg)              \
+    {                                             \
+        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);       \
+        LOG_WRN(msg);                             \
+        ___LOG_hexDump(data, count, LOG_COL_WRN); \
+        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM);     \
     }
 
-#define LOG_ERR_HD(data, count, msg)          \
-    {                                         \
-        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);   \
-        LOG_ERR(msg);                         \
-        ___LOG_hexDump(data, count);          \
-        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM); \
+#define LOG_ERR_HD(data, count, msg)              \
+    {                                             \
+        ___LOG_FLOCKFILE(___LOG_OUTSTREAM);       \
+        LOG_ERR(msg);                             \
+        ___LOG_hexDump(data, count, LOG_COL_ERR); \
+        ___LOG_FUNLOCKFILE(___LOG_OUTSTREAM);     \
     }
 
 #if !LOG_LEVEL_IS_ENABLED(LOG_LEVEL_DBG)
@@ -212,7 +212,7 @@ std::string LOG_tNow_local_iso8601();
 const char* LOG_tNow_local_iso8601();
 #endif // __cplusplus
 
-void ___LOG_hexDump(const void* data, size_t count);
+void ___LOG_hexDump(const void* data, size_t count, int colour);
 
 
 
@@ -316,8 +316,12 @@ static void ___LOG_hexDump_dataToString(char* buffer, const uint8_t* p, const ui
     buffer[i] = 0;
 }
 
-void ___LOG_hexDump(const void* data, size_t count)
+void ___LOG_hexDump(const void* data, size_t count, int colour)
 {
+    static_assert(CSI_EL == 0, "check if 0 can be used for 'no colour'"); // erase line can be reused as _nop_ in here
+    if ((colour >= ANSI_ESC__end_) || (colour < 0)) { colour = 0; }
+    if (colour) { fprintf(___LOG_OUTSTREAM, "%s", ansi::esc[colour]); }
+
     if (!data) { count = 0; }
 
     const uint8_t* const end = ((const uint8_t*)data + count);
@@ -358,6 +362,7 @@ void ___LOG_hexDump(const void* data, size_t count)
     ___LOG_hexDump_dataToString(str, end - lastRowSize, end);
     fprintf(___LOG_OUTSTREAM, "  | %s", str);
 
+    if (colour) { fprintf(___LOG_OUTSTREAM, "%s", ansi::esc[SGR_RESET]); }
     fprintf(___LOG_OUTSTREAM, "\n");
 }
 
