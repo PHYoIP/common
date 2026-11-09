@@ -1,6 +1,6 @@
 /*
 author          Oliver Blaser
-date            03.02.2026
+date            09.11.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
@@ -9,6 +9,7 @@ copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 
 
@@ -23,7 +24,32 @@ std::string toUpper_ascii(const std::string& str);
 
 
 
+constexpr char toHexStr_defaultDelimiter = 0x20;
+
+std::string toHexStr(int8_t value);
+std::string toHexStr(uint8_t value);
+std::string toHexStr(int16_t value);
+std::string toHexStr(uint16_t value);
+std::string toHexStr(int32_t value);
+std::string toHexStr(uint32_t value);
+std::string toHexStr(int64_t value);
+std::string toHexStr(uint64_t value);
+std::string toHexStr(int16_t value, char delimiter);
+std::string toHexStr(uint16_t value, char delimiter);
+std::string toHexStr(int32_t value, char delimiter);
+std::string toHexStr(uint32_t value, char delimiter);
+std::string toHexStr(int64_t value, char delimiter);
+std::string toHexStr(uint64_t value, char delimiter);
+std::string toHexStr(const std::vector<char>& data, char delimiter = toHexStr_defaultDelimiter);
+std::string toHexStr(const std::vector<uint8_t>& data, char delimiter = toHexStr_defaultDelimiter);
+std::string toHexStr(const char* data, size_t count, char delimiter = toHexStr_defaultDelimiter);
+std::string toHexStr(const uint8_t* data, size_t count, char delimiter = toHexStr_defaultDelimiter);
+
 int32_t hexstoi(const std::string& str);
+int64_t hexstoi64(const std::string& str);
+uint32_t hexstoui(const std::string& str);
+uint64_t hexstoui64(const std::string& str);
+std::vector<uint8_t> hexstovector(const std::string& str, char delimiter = toHexStr_defaultDelimiter);
 
 
 

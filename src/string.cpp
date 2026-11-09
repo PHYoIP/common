@@ -1,12 +1,13 @@
 /*
 author          Oliver Blaser
-date            03.02.2026
+date            09.11.2026
 copyright       GPL-3.0 - Copyright (c) 2026 Oliver Blaser
 */
 
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "common/string.h"
 
@@ -89,7 +90,60 @@ std::string comm::toUpper_ascii(const std::string& str)
 
 
 
+std::string comm::toHexStr(int8_t value) { return comm::toHexStr((uint8_t)value); }
+std::string comm::toHexStr(uint8_t value)
+{
+    const char r[] = { hexDigitsLower[(value >> 4) & 0x0F], hexDigitsLower[value & 0x0F], 0 };
+    return r;
+}
+std::string comm::toHexStr(int16_t value) { return toHexStr((uint16_t)value); }
+std::string comm::toHexStr(uint16_t value) { return toHexStr((uint8_t)(value >> 8)) + toHexStr((uint8_t)value); }
+std::string comm::toHexStr(int32_t value) { return toHexStr((uint32_t)value); }
+std::string comm::toHexStr(uint32_t value)
+{
+    return toHexStr((uint8_t)(value >> 24)) + toHexStr((uint8_t)(value >> 16)) + toHexStr((uint8_t)(value >> 8)) + toHexStr((uint8_t)value);
+}
+std::string comm::toHexStr(int64_t value) { return toHexStr((uint64_t)value); }
+std::string comm::toHexStr(uint64_t value)
+{
+    return toHexStr((uint8_t)(value >> 56)) + toHexStr((uint8_t)(value >> 48)) + toHexStr((uint8_t)(value >> 40)) + toHexStr((uint8_t)(value >> 32)) +
+           toHexStr((uint8_t)(value >> 24)) + toHexStr((uint8_t)(value >> 16)) + toHexStr((uint8_t)(value >> 8)) + toHexStr((uint8_t)value);
+}
+std::string comm::toHexStr(int16_t value, char delimiter) { return toHexStr((uint16_t)value, delimiter); }
+std::string comm::toHexStr(uint16_t value, char delimiter) { return toHexStr((uint8_t)(value >> 8)) + delimiter + toHexStr((uint8_t)value); }
+std::string comm::toHexStr(int32_t value, char delimiter) { return toHexStr((uint32_t)value, delimiter); }
+std::string comm::toHexStr(uint32_t value, char delimiter)
+{
+    return toHexStr((uint8_t)(value >> 24)) + delimiter + toHexStr((uint8_t)(value >> 16)) + delimiter + toHexStr((uint8_t)(value >> 8)) + delimiter +
+           toHexStr((uint8_t)value);
+}
+std::string comm::toHexStr(int64_t value, char delimiter) { return toHexStr((uint64_t)value, delimiter); }
+std::string comm::toHexStr(uint64_t value, char delimiter)
+{
+    return toHexStr((uint8_t)(value >> 56)) + delimiter + toHexStr((uint8_t)(value >> 48)) + delimiter + toHexStr((uint8_t)(value >> 40)) + delimiter +
+           toHexStr((uint8_t)(value >> 32)) + delimiter + toHexStr((uint8_t)(value >> 24)) + delimiter + toHexStr((uint8_t)(value >> 16)) + delimiter +
+           toHexStr((uint8_t)(value >> 8)) + delimiter + toHexStr((uint8_t)value);
+}
+std::string comm::toHexStr(const std::vector<char>& data, char delimiter) { return toHexStr(data.data(), data.size(), delimiter); }
+std::string comm::toHexStr(const std::vector<uint8_t>& data, char delimiter) { return toHexStr(data.data(), data.size(), delimiter); }
+std::string comm::toHexStr(const char* data, size_t count, char delimiter) { return toHexStr((const uint8_t*)data, count, delimiter); }
+std::string comm::toHexStr(const uint8_t* data, size_t count, char delimiter)
+{
+    std::string str;
+
+    for (size_t i = 0; i < count; ++i)
+    {
+        if ((i > 0) && (delimiter != 0)) str += delimiter;
+
+        str += toHexStr(data[i]);
+    }
+
+    return str;
+}
 int32_t comm::hexstoi(const std::string& str) { return hexstointeger<int32_t>(str, "hexstoi"); }
+int64_t comm::hexstoi64(const std::string& str) { return hexstointeger<int64_t>(str, "hexstoi64"); }
+uint32_t comm::hexstoui(const std::string& str) { return hexstointeger<uint32_t>(str, "hexstoui"); }
+uint64_t comm::hexstoui64(const std::string& str) { return hexstointeger<uint64_t>(str, "hexstoui64"); }
 
 
 
